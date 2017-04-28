@@ -1,0 +1,7 @@
+# Production requirements. This include dev requirements plus some extra ones.
+-r requirements-dev.txt
+
+gunicorn==19.4.5
+dj-database-url==0.4.1
+psycopg2==2.6.1
+boto==2.39.0
