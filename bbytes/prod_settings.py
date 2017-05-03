@@ -130,4 +130,20 @@ MEDIA_URL = "https://%s/" % AWS_S3_CUSTOM_DOMAIN
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
 
 # Settings for https://github.com/ottoyiu/django-cors-headers
-CORS_ORIGIN_WHITELIST = ('herokuapp.com')
+CORS_ORIGIN_WHITELIST = ('infinite-brushlands-39735.herokuapp.com')
+CORS_ALLOW_METHODS = (
+        'GET',
+        'POST',
+        'PUT',
+        'PATCH',
+        'DELETE',
+        'OPTIONS'
+)
+CORS_ALLOW_HEADERS = (
+        'x-requested-with',
+        'content-type',
+        'accept',
+        'origin',
+        'authorization',
+        'x-csrftoken'
+)
