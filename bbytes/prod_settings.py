@@ -1,15 +1,15 @@
 """
-Django settings for ivanc project.
+Django settings for bbytes project.
 Settings for production environment
 """
 
 import dj_database_url
-from base_settings import *
+from bbytes.base_settings import *
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 
-ALLOWED_HOSTS = ['api.ivanc.uk']
+ALLOWED_HOSTS = ['infinite-brushlands-39735.herokuapp.com']
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
@@ -47,7 +47,16 @@ X_FRAME_OPTIONS = 'DENY'
 # https://docs.djangoproject.com/en/1.9/ref/settings/#databases
 # Uses database config from env variable DATABASE_URL
 # More info: https://github.com/kennethreitz/dj-database-url
-DATABASES = {}
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'bbytes_prod',
+        'USER': 'bbytes',
+        'PASSWORD': 'password',
+        'HOST': 'postgres',
+        'PORT': 5432,
+    }
+}
 DATABASES['default'] = dj_database_url.config(conn_max_age=500)
 
 # Static files (CSS, JavaScript, Images)
@@ -80,4 +89,4 @@ MEDIA_URL = "https://%s/" % AWS_S3_CUSTOM_DOMAIN
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
 
 # Settings for https://github.com/ottoyiu/django-cors-headers
-CORS_ORIGIN_WHITELIST = ('ivanc.uk')
+CORS_ORIGIN_WHITELIST = ('herokuapp.com')

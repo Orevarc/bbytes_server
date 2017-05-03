@@ -1,1 +1,1 @@
-web: gunicorn ivanc.wsgi --log-file -
+web: gunicorn bbytes.wsgi --log-file -

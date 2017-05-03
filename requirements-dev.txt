@@ -7,3 +7,13 @@ requests-cache==0.4.11
 vcrpy==1.7.4
 django-storages==1.4.1
 whitenoise==3.0
+
+
+# BeautifulSoup
+beautifulsoup4==4.4.0
+
+# PostgresSQL
+psycopg2==2.6.2
+
+# Logging
+git+https://github.com/Seedstars/django-rest-logger.git

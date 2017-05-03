@@ -5,4 +5,5 @@ urlpatterns = [
     url(r'^apps/$', views.AppList.as_view(), name='apps'),
     url(r'^repos/$', views.RepoList.as_view(), name='repos'),
     url(r'^articles/$', views.ArticleList.as_view(), name='articles'),
+    url(r'^get_ingredients/$', views.ShoppingList.as_view(), name='get_ingredients'),
 ]

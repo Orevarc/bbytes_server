@@ -1,5 +1,5 @@
 """
-Django settings for ivanc project.
+Django settings for bbytes project.
 Base settings for all environments
 """
 
@@ -50,7 +50,7 @@ REST_FRAMEWORK = {
     )
 }
 
-ROOT_URLCONF = 'ivanc.urls'
+ROOT_URLCONF = 'bbytes.urls'
 
 TEMPLATES = [
     {
@@ -68,7 +68,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'ivanc.wsgi.application'
+WSGI_APPLICATION = 'bbytes.wsgi.application'
 
 
 # Password validation

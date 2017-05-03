@@ -7,6 +7,8 @@ from rest_api.models import App, Repo, Article
 from rest_api import serializers
 import logging
 
+from rest_api.utils import get_shopping_list_from_urls
+
 
 class AppList(APIView):
     """
@@ -82,3 +84,19 @@ class ArticleList(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ShoppingList(APIView):
+    """
+    Shopping list endpoints
+    """
+    def post(self, request):
+        '''
+        Posting a list of urls to obtain a shopping list
+        '''
+        print("HERE")
+        print(request.data)
+        shopping_list = get_shopping_list_from_urls(request.data.get('recipeUrls'))
+        return Response({
+            'shopping_list': shopping_list,
+        })
