@@ -57,7 +57,7 @@ def get_shopping_list_from_urls(urls):
 def merge_ingredients(ingredient_list):
     merged_ingredients = {}
     for ingredient in ingredient_list:
-        # Adding whole items (ie. 1 red pepper)
+        # Adding whole items (ie. 1 red pepper))
         name = ingredient.get('name')
         if merged_ingredients.get(name, None):
             merged_ingredients[name]['amount'] += ingredient.get('amount')
