@@ -12,7 +12,7 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 ALLOWED_HOSTS = ['infinite-brushlands-39735.herokuapp.com']
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 # Because of warning:
 # Your SECURE_CONTENT_TYPE_NOSNIFF setting is not set to True, so your pages will not be served with
