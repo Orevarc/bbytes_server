@@ -1,7 +1,159 @@
+import re
+
+
+CHOICE_NAME_PATTERN = r'^[A-Z]'
+
+
+def convert_camel_to_snake(name):
+    # convert all non alphabets to underscore
+    s = re.sub('\W+', '_', name)
+    s1 = re.sub('([^_])([A-Z][a-z]+)', r'\1_\2', s.strip('_'))
+    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1)
+
+
+class ChoiceMeta(type):
+    '''
+    Meta class for choices
+
+    When defining new choice class with choices specified, class attribute
+    can be created dynamically by the choices fields.
+
+    for example:
+
+    class DynamicTemplateTypes(Choices):
+        choices = (
+            ('GRID', 'GridType'),
+            ('CAROUSEL', 'CarouselType'),
+        )
+
+    Then this can be used
+
+    DynamicTemplateTypes.GRID_TYPE == 'GRID'
+    DynamicTemplateTypes.CAROUSEL_TYPE == 'CAROUSEL'
+
+    The second value (choice name) is converted to upper and snake case and used
+    as Class property name
+    '''
+    def __new__(mcs, name, bases, dict):
+        if dict.get('choices'):
+            keys = dict.keys()
+            for tup in dict['choices']:
+                val = tup[0]
+                # class property name
+                key = convert_camel_to_snake(tup[1]).upper()
+                if re.match(CHOICE_NAME_PATTERN, key) and key not in keys:
+                    dict[key] = val
+        return type.__new__(mcs, name, bases, dict)
+
+
+class Choices(object):
+    __metaclass__ = ChoiceMeta
+    '''
+        Uses class attribute 'choices' and creates a class that provides
+        access to the choice and value.
+
+        This allows us to use the choice format but ensure that invalid choices
+        cannot be used.
+
+        Example:
+            Class MyChoices(Choices):
+                FOO = 1
+                BAZ = 2
+
+                choices = (
+                    (FOO, 'foo bar!'),
+                    (BAZ, '2 baz'),
+                )
+
+            >>> MyChoices.FOO
+            1
+            >>> MyChoices.BAZ
+            2
+            >>> MyChoices.choices
+            ((1, 'foo bar!'), (2, '2 baz'))
+            >>> MyChoices.name(MyChoices.FOO)
+            'foo bar!'
+    '''
+    choices = ()
+
+    @classmethod
+    def name(cls, value):
+        '''
+            Returns the frontend display name for this choice
+        '''
+        for choice, choice_label in cls.choices:
+            if value == choice:
+                return choice_label
+
+    @classmethod
+    def valid_value(cls, value):
+        '''
+            Checks if given value is a valid choice
+        '''
+        for choice, choice_label in cls.choices:
+            if value == choice:
+                return True
+        return False
+
+    @classmethod
+    def from_label(cls, label):
+        '''
+            Returns the value based on the given label
+        '''
+        for choice, choice_label in cls.choices:
+            if label == choice_label:
+                return choice
+
+    @classmethod
+    def keys_list(cls):
+        '''
+            Returns a list of all allowed values.
+        '''
+        return [choice[0] for choice in cls.choices]
+
+
+class IngredientCategories(Choices):
+    BREAD = 'BREAD'
+    CANNED = 'CANNED'
+    DAIRY = 'DAIRY'
+    HERB = 'HERB'
+    FROZEN = 'FROZEN'
+    FRUIT = 'FRUIT'
+    MEAT = 'MEAT'
+    OTHER = 'OTHER'
+    SPICE = 'SPICE'
+    VEGETABLE = 'VEGETABLE'
+
+    choices = (
+        (BREAD, 'BREAD'),
+        (CANNED, 'CANNED'),
+        (DAIRY, 'DAIRY'),
+        (HERB, 'HERB'),
+        (FROZEN, 'FROZEN'),
+        (FRUIT, 'FRUIT'),
+        (MEAT, 'MEAT'),
+        (OTHER, 'OTHER'),
+        (SPICE, 'SPICE'),
+        (VEGETABLE, 'VEGETABLE'),
+    )
+
 DEFAULT_MEASURABLE_UNIT = 'g'
 
 MEASURABLE = 'MEASURABLE'
 NON_MEASURABLE = 'NON_MEASURABLE'
+
+INGREDIENT_CATEGORIES = [
+    'bread',
+    'canned',
+    'dairy',
+    'herb',
+    'frozen',
+    'fruit',
+    'meat',
+    'other',
+    'spice',
+    'vegetable',
+]
 
 INGREDIENT_AMOUNTS = [
     ('bunch', NON_MEASURABLE),# 1/2 bunch of cilantro
