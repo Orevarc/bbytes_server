@@ -113,26 +113,32 @@ class Choices(object):
 
 
 class IngredientCategories(Choices):
+    BAKING = 'BAKING'
     BREAD = 'BREAD'
     CANNED = 'CANNED'
     DAIRY = 'DAIRY'
     HERB = 'HERB'
     FROZEN = 'FROZEN'
     FRUIT = 'FRUIT'
+    NUT = 'NUT'
     MEAT = 'MEAT'
     OTHER = 'OTHER'
+    SEAFOOD = 'SEAFOOD'
     SPICE = 'SPICE'
     VEGETABLE = 'VEGETABLE'
 
     choices = (
+        (BAKING, 'BAKING'),
         (BREAD, 'BREAD'),
         (CANNED, 'CANNED'),
         (DAIRY, 'DAIRY'),
         (HERB, 'HERB'),
         (FROZEN, 'FROZEN'),
         (FRUIT, 'FRUIT'),
+        (NUT, 'NUT'),
         (MEAT, 'MEAT'),
         (OTHER, 'OTHER'),
+        (SEAFOOD, 'SEAFOOD'),
         (SPICE, 'SPICE'),
         (VEGETABLE, 'VEGETABLE'),
     )
@@ -141,19 +147,6 @@ DEFAULT_MEASURABLE_UNIT = 'g'
 
 MEASURABLE = 'MEASURABLE'
 NON_MEASURABLE = 'NON_MEASURABLE'
-
-INGREDIENT_CATEGORIES = [
-    'bread',
-    'canned',
-    'dairy',
-    'herb',
-    'frozen',
-    'fruit',
-    'meat',
-    'other',
-    'spice',
-    'vegetable',
-]
 
 INGREDIENT_AMOUNTS = [
     ('bunch', NON_MEASURABLE),# 1/2 bunch of cilantro
@@ -171,11 +164,15 @@ INGREDIENT_AMOUNTS = [
     ('lb.', MEASURABLE),
     ('lbs', MEASURABLE),
     ('oz.', MEASURABLE),
+    ('pinch', NON_MEASURABLE),
     ('small', NON_MEASURABLE),
     ('tbsp', MEASURABLE),
     ('tsp', MEASURABLE),
     ('whole', NON_MEASURABLE)
 ]
+
+PINCH_AMOUNT = 5
+PINCH_AMOUNT_UNIT = 'g'
 
 CONVERSION_MAP = {
         'L': {
@@ -209,14 +206,14 @@ CONVERSION_MAP = {
             'kg': 0.005,
         },
         'tbsp': {
-            'L': 0.0147868,
-            'ml': 14.7868,
+            'L': 0.015,
+            'ml': 15,
             'tsp': 3,
             'cup': 0.06161,
             'oz': 0.5,
             'lb': 0, #
-            'g': 14.7868,
-            'kg': 0.0147868,
+            'g': 15,
+            'kg': 0.015,
         },
         'cup': {
             'L': 0.24,
@@ -268,4 +265,26 @@ CONVERSION_MAP = {
             'lb': 2.2046,
             'g': 1000,
         }
+}
+
+FRACTIONS = {
+    0x2189: 0.0,  # ; ; 0 # No       VULGAR FRACTION ZERO THIRDS
+    0x2152: 0.1,  # ; ; 1/10 # No       VULGAR FRACTION ONE TENTH
+    0x2151: 0.11111111,  # ; ; 1/9 # No       VULGAR FRACTION ONE NINTH
+    0x215B: 0.125,  # ; ; 1/8 # No       VULGAR FRACTION ONE EIGHTH
+    0x2150: 0.14285714,  # ; ; 1/7 # No       VULGAR FRACTION ONE SEVENTH
+    0x2159: 0.16666667,  # ; ; 1/6 # No       VULGAR FRACTION ONE SIXTH
+    0x2155: 0.2,  # ; ; 1/5 # No       VULGAR FRACTION ONE FIFTH
+    0x00BC: 0.25,  # ; ; 1/4 # No       VULGAR FRACTION ONE QUARTER
+    0x2153: 0.33333333,  # ; ; 1/3 # No       VULGAR FRACTION ONE THIRD
+    0x215C: 0.375,  # ; ; 3/8 # No       VULGAR FRACTION THREE EIGHTHS
+    0x2156: 0.4,  # ; ; 2/5 # No       VULGAR FRACTION TWO FIFTHS
+    0x00BD: 0.5,  # ; ; 1/2 # No       VULGAR FRACTION ONE HALF
+    0x2157: 0.6,  # ; ; 3/5 # No       VULGAR FRACTION THREE FIFTHS
+    0x215D: 0.625,  # ; ; 5/8 # No       VULGAR FRACTION FIVE EIGHTHS
+    0x2154: 0.66666667,  # ; ; 2/3 # No       VULGAR FRACTION TWO THIRDS
+    0x00BE: 0.75,  # ; ; 3/4 # No       VULGAR FRACTION THREE QUARTERS
+    0x2158: 0.8,  # ; ; 4/5 # No       VULGAR FRACTION FOUR FIFTHS
+    0x215A: 0.83333333,  # ; ; 5/6 # No       VULGAR FRACTION FIVE SIXTHS
+    0x215E: 0.875,  # ; ; 7/8 # No       VULGAR FRACTION SEVEN EIGHTHS
 }
