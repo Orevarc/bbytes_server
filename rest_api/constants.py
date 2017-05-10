@@ -122,6 +122,7 @@ class IngredientCategories(Choices):
     FRUIT = 'FRUIT'
     NUT = 'NUT'
     MEAT = 'MEAT'
+    MISC = 'MISC'
     OTHER = 'OTHER'
     SEAFOOD = 'SEAFOOD'
     SPICE = 'SPICE'
@@ -137,6 +138,7 @@ class IngredientCategories(Choices):
         (FRUIT, 'FRUIT'),
         (NUT, 'NUT'),
         (MEAT, 'MEAT'),
+        (MISC, 'MISC'),
         (OTHER, 'OTHER'),
         (SEAFOOD, 'SEAFOOD'),
         (SPICE, 'SPICE'),
@@ -148,27 +150,23 @@ DEFAULT_MEASURABLE_UNIT = 'g'
 MEASURABLE = 'MEASURABLE'
 NON_MEASURABLE = 'NON_MEASURABLE'
 
-INGREDIENT_AMOUNTS = [
+INGREDIENT_UNITS = [
     ('bunch', NON_MEASURABLE),# 1/2 bunch of cilantro
-    ('can', NON_MEASURABLE),
     ('clove', NON_MEASURABLE),
     ('cloves', NON_MEASURABLE),
     ('cup', MEASURABLE),
     ('cups', MEASURABLE),
-    ('fresh', NON_MEASURABLE), # 1 fresh lemon
     ('inch', NON_MEASURABLE),
     ('inches', NON_MEASURABLE),
     ('kg', MEASURABLE),
     ('ml', MEASURABLE),
-    ('large', NON_MEASURABLE),
     ('lb.', MEASURABLE),
     ('lbs', MEASURABLE),
     ('oz.', MEASURABLE),
+    ('oz', MEASURABLE),
     ('pinch', NON_MEASURABLE),
-    ('small', NON_MEASURABLE),
     ('tbsp', MEASURABLE),
     ('tsp', MEASURABLE),
-    ('whole', NON_MEASURABLE)
 ]
 
 PINCH_AMOUNT = 5

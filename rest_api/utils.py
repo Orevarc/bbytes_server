@@ -11,7 +11,8 @@ from rest_api.constants import (
     CONVERSION_MAP,
     DEFAULT_MEASURABLE_UNIT,
     FRACTIONS,
-    INGREDIENT_AMOUNTS,
+    IngredientCategories,
+    INGREDIENT_UNITS,
     PINCH_AMOUNT,
     PINCH_AMOUNT_UNIT
 )
@@ -20,72 +21,93 @@ from rest_api.models import (
     IngredientMapping
 )
 
+list_template = {
+    'item_list': [],
+    'for_review': []    
+}
+
+item_template = {
+    'name': '',
+    'amount': 1,
+    'unit': '',
+    'category':  ''
+}
+
 
 def get_shopping_list_from_urls(urls):
     shopping_list = []
     for url in urls:
         recipe_page = BeautifulSoup(urllib.request.urlopen(url))
         ingredient_list = recipe_page.find_all('li', {'class': 'ingredient'})
-        for ingredient in ingredient_list:
-            item = {}
-            amount = 0
-            amount_unit = ''
-            name = ''
-            full_text = ''.join(ingredient.findAll(text=True))
-            amt_ingredient = full_text.rsplit('$')[0]
-            found = False
-            for amount_string in INGREDIENT_AMOUNTS:
-                if amount_string[0] in amt_ingredient.lower():
-                    split = amt_ingredient.lower().rsplit(amount_string[0])
-                    amount = split[0]
-                    name = split[1]
-                    amount, amount_unit = AmountConverter.convert_measurable_amount(
-                        from_unit=amount_string[0],
-                        to_unit=DEFAULT_MEASURABLE_UNIT,
-                        amount=amount
-                    )
-                    found = True
-            if not found:
-                amount = [int(s) for s in amt_ingredient.split() if s.isdigit()]
-                if not amount:
-                    amount = PINCH_AMOUNT
-                    item['amount_unit'] = PINCH_AMOUNT_UNIT
-                else:
-                    amount = amount[0]
-                    item['amount_unit'] = ''
-                item['amount'] = convert_to_number(amount)
-                item['name'] = amt_ingredient.translate(string.punctuation).strip()
-            else:
-                item['amount'] = convert_to_number(amount)
-                item['amount_unit'] = amount_unit.translate(string.punctuation).strip()
-                item['name'] = name.translate(string.punctuation).strip()
-            log.warning("{}: {} - {}".format(full_text, item['name'], item['amount_unit']))
-            shopping_list.append(item)
+        shopping_list = get_ingredients(ingredient_list)
     return merge_ingredients(shopping_list)
 
 
+def get_ingredients(ingredient_list):
+    shopping_list = []
+    for ingredient in ingredient_list:
+        item = dict(item_template)
+        amount = 0
+        amount_unit = ''
+        name = ''
+        full_text = ''.join(ingredient.findAll(text=True))
+        amt_ingredient = full_text.rsplit('$')[0]
+        ingredient_unit_found = False
+        for ingredient_unit in INGREDIENT_UNITS:
+            if ingredient_unit[0] in amt_ingredient.lower():
+                split = amt_ingredient.lower().rsplit(ingredient_unit[0])
+                amount = split[0]
+                name = split[1]
+                amount, amount_unit = AmountConverter.convert_measurable_amount(
+                    from_unit=ingredient_unit[0],
+                    to_unit=DEFAULT_MEASURABLE_UNIT,
+                    amount=amount
+                )
+                ingredient_unit_found = True
+        if not ingredient_unit_found:
+            amount = [int(s) for s in amt_ingredient.split() if s.isdigit()]
+            if not amount:
+                # If no amount ingredient and no amount
+                item['name'] = amt_ingredient
+                item['category'] = IngredientCategories.MISC
+            else:
+                amount = amount[0]
+                item['unit'] = ''
+                item['amount'] = convert_to_number(amount)
+                item['name'] = amt_ingredient.translate(string.punctuation).strip()
+        else:
+            item['amount'] = convert_to_number(amount)
+            item['unit'] = amount_unit.translate(string.punctuation).strip()
+            item['name'] = name.translate(string.punctuation).strip()
+        log.warning("{}: {} - {}".format(full_text, item['name'], item['unit']))
+        shopping_list.append(item)
+    return shopping_list
+
+
 def merge_ingredients(ingredient_list):
-    merged_ingredients = {}
+    merged_shopping_list = dict(list_template)
+    item_list = {}
+    for_review = []
     for ingredient in ingredient_list:
         # Adding whole items (ie. 1 red pepper))
-        ingredient_name = ''
         parsed_name = ingredient.get('name')
-        print("HERE???")
-        print(parsed_name)
         base_ingredient = get_base_ingredient(parsed_name)
         if base_ingredient:
-            ingredient_name = base_ingredient.name
-            ingredient_category = base_ingredient.category
+            ingredient['name'] = base_ingredient.name
+            ingredient['category'] = base_ingredient.category
+            if item_list.get(ingredient['name'], None):
+                item_list[ingredient['name']]['amount'] += ingredient.get('amount')
+            else:
+                item_list[ingredient['name']] = {
+                    'amount': ingredient.get('amount'),
+                    'unit': ingredient.get('unit'),
+                    'category': ingredient.get('category')
+                }
         else:
-            ingredient_name = parsed_name
-        if merged_ingredients.get(ingredient_name, None):
-            merged_ingredients[ingredient_name]['amount'] += ingredient.get('amount')
-        else:
-            merged_ingredients[ingredient_name] = {
-                'amount': ingredient.get('amount'),
-                'unit': ingredient.get('amount_unit')
-            }
-    return merged_ingredients
+            for_review.append(ingredient)
+    merged_shopping_list['item_list'] = item_list
+    merged_shopping_list['for_review'] = for_review
+    return merged_shopping_list
 
 
 def get_base_ingredient(parsed_name):
@@ -113,6 +135,7 @@ def get_base_ingredient(parsed_name):
                 base_ingredient_filter = base_ingredient_filter.split(
                     ' ', 1)[1]
             else:
+                print("Here")
                 base_ingredient_found = True
                 base_ingredient = get_ingredient_mapping(parsed_name)
     return base_ingredient
@@ -131,6 +154,8 @@ def get_ingredient_mapping(parsed_name):
     ingredient_mapping_filter = parsed_name
     while not ingredient_mapping_found:
         try:
+            print("123")
+            print(ingredient_mapping_filter)
             ingredient_mapping = IngredientMapping.objects.get(
                 name=ingredient_mapping_filter)
         except IngredientMapping.DoesNotExist:
@@ -139,6 +164,7 @@ def get_ingredient_mapping(parsed_name):
             ingredient_mapping_found = True
             base_ingredient = BaseIngredient.objects.get(
                 pk=ingredient_mapping.ingredient_id)
+            print(base_ingredient.name)
         else:
             if ' ' in ingredient_mapping_filter:
                 ingredient_mapping_filter = ingredient_mapping_filter.split(
@@ -149,7 +175,7 @@ def get_ingredient_mapping(parsed_name):
 
 
 def convert_to_number(number):
-    if not number:
+    if not number or isinstance(number, str):
         return 1.0
     if isinstance(number, numbers.Real):
         return float(number)
