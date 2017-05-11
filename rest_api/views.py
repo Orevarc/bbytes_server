@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_api.helpers import GitHubRepoFetcher
-from rest_api.models import App, Repo, Article
+from rest_api.models import App, Repo, Article, BaseIngredient, IngredientMapping
 from rest_api import serializers
 import logging
 
@@ -86,7 +86,7 @@ class ArticleList(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ShoppingList(APIView):
+class ShoppingListApi(APIView):
     """
     Shopping list endpoints
     """
@@ -94,9 +94,33 @@ class ShoppingList(APIView):
         '''
         Posting a list of urls to obtain a shopping list
         '''
-        print("HERE")
-        print(request.data)
         shopping_list = get_shopping_list_from_urls(request.data.get('recipeUrls'))
         return Response({
-            'shopping_list': shopping_list,
+            'shoppingList': shopping_list,
         })
+
+
+class BaseIngredientApi(APIView):
+    """
+    Base Ingredient Endpoints
+    """
+    def get(self, request, *args, **kwargs):
+        base_ingredients = BaseIngredient.objects.all()
+        serializer = serializers.BaseIngredientSerializer(base_ingredients, many=True, context={'request': request})
+        return Response({
+            'baseIngredients': serializer.data
+        })
+
+
+class IngredientMappingApi(APIView):
+    """
+    Ingredient Mapping Endpoints
+    """
+    def post(self, request, *args, **kwargs):
+        print("IN IM API")
+        print(request.data)
+        serializer = serializers.IngredientMappingSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
