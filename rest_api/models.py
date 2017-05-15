@@ -61,7 +61,7 @@ class Article(WorkPiece):
 
 class BaseIngredient(models.Model):
 
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, unique=True)
     category = models.CharField(max_length=255, choices=IngredientCategories.choices, default=IngredientCategories.OTHER)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

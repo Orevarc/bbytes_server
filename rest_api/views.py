@@ -5,8 +5,11 @@ from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_api.helpers import GitHubRepoFetcher
 from rest_api.models import App, Repo, Article, BaseIngredient, IngredientMapping
 from rest_api import serializers
+
+import json
 import logging
 
+from rest_api.constants import IngredientCategories
 from rest_api.utils import get_shopping_list_from_urls
 
 
@@ -111,6 +114,13 @@ class BaseIngredientApi(APIView):
             'baseIngredients': serializer.data
         })
 
+    def post(self, request, *args, **kwargs):
+        serializer = serializers.BaseIngredientSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class IngredientMappingApi(APIView):
     """
@@ -124,3 +134,12 @@ class IngredientMappingApi(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class IngredientCategoryApi(APIView):
+
+    def get(self, request, *args, **kwargs):
+        categories = dict(IngredientCategories.choices)
+        return Response({
+            'categories': json.dumps(categories)
+        })

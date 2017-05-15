@@ -3,6 +3,7 @@ from django_rest_logger import log
 import numbers
 import re
 import string
+from sys import maxsize
 import unicodedata
 import urllib.request
 from bs4 import BeautifulSoup
@@ -33,13 +34,43 @@ item_template = {
     'category':  ''
 }
 
+translator = str.maketrans('', '', string.punctuation)
+
+
+def string_punctuation(text):
+    return text.translate(translator).strip()
+
+
+def find_amount(full_ingredient):
+    print('><><><><><><><')
+    print(full_ingredient)
+    amount = [int(s) for s in full_ingredient.split() if s.isdigit()]
+    print(amount)
+    if not amount:
+        rx = r'(\d*)(%s)' % '|'.join(map(chr, FRACTIONS))
+        fraction_test = re.findall(rx, full_ingredient)
+        try:
+            amount = fraction_test[0][1]
+        except IndexError:
+            amount = None
+    else:
+        amount = amount[0]
+    return amount
+
+
+def find_amount_unit(amount_unit, full_ingredient):
+    try:
+        return full_ingredient.index(amount_unit), amount_unit
+    except ValueError:
+        return maxsize, None
+
 
 def get_shopping_list_from_urls(urls):
     shopping_list = []
     for url in urls:
         recipe_page = BeautifulSoup(urllib.request.urlopen(url))
         ingredient_list = recipe_page.find_all('li', {'class': 'ingredient'})
-        shopping_list = get_ingredients(ingredient_list)
+        shopping_list.extend(get_ingredients(ingredient_list))
     return merge_ingredients(shopping_list)
 
 
@@ -51,35 +82,43 @@ def get_ingredients(ingredient_list):
         amount_unit = ''
         name = ''
         full_text = ''.join(ingredient.findAll(text=True))
-        amt_ingredient = full_text.rsplit('$')[0]
+        full_ingredient = string_punctuation(full_text.rsplit('$')[0].lower())
         ingredient_unit_found = False
-        for ingredient_unit in INGREDIENT_UNITS:
-            if ingredient_unit[0] in amt_ingredient.lower():
-                split = amt_ingredient.lower().rsplit(ingredient_unit[0])
-                amount = split[0]
-                name = split[1]
-                amount, amount_unit = AmountConverter.convert_measurable_amount(
-                    from_unit=ingredient_unit[0],
-                    to_unit=DEFAULT_MEASURABLE_UNIT,
-                    amount=amount
-                )
-                ingredient_unit_found = True
+        unit_index, amount_unit = min(find_amount_unit(
+            unit[0], full_ingredient) for unit in INGREDIENT_UNITS)
+        if amount_unit:
+            amount = full_ingredient[:unit_index]
+            unit_char_count = len(amount_unit)
+            name_start_index = unit_index + unit_char_count
+            name = full_ingredient[name_start_index:]
+            print('111111')
+            print(full_ingredient)
+            print(amount)
+            print(amount_unit)
+            amount, amount_unit = AmountConverter.convert_measurable_amount(
+                from_unit=amount_unit,
+                to_unit=DEFAULT_MEASURABLE_UNIT,
+                amount=amount
+            )
+            print('2222222')
+            print(full_ingredient)
+            print(amount)
+            print(amount_unit)
+            ingredient_unit_found = True
         if not ingredient_unit_found:
-            amount = [int(s) for s in amt_ingredient.split() if s.isdigit()]
+            amount = find_amount(full_ingredient)
             if not amount:
                 # If no amount ingredient and no amount
-                item['name'] = amt_ingredient
+                item['name'] = full_ingredient
                 item['category'] = IngredientCategories.MISC
             else:
-                amount = amount[0]
                 item['unit'] = ''
                 item['amount'] = convert_to_number(amount)
-                item['name'] = amt_ingredient.translate(string.punctuation).strip()
+                item['name'] = full_ingredient.rsplit(str(amount))[1]
         else:
             item['amount'] = convert_to_number(amount)
             item['unit'] = amount_unit.translate(string.punctuation).strip()
             item['name'] = name.translate(string.punctuation).strip()
-        log.warning("{}: {} - {}".format(full_text, item['name'], item['unit']))
         shopping_list.append(item)
     return shopping_list
 
@@ -132,10 +171,11 @@ def get_base_ingredient(parsed_name):
             base_ingredient_found = True
         else:
             if ' ' in base_ingredient_filter:
+                print('=====')
+                print(base_ingredient_filter)
                 base_ingredient_filter = base_ingredient_filter.split(
                     ' ', 1)[1]
             else:
-                print("Here")
                 base_ingredient_found = True
                 base_ingredient = get_ingredient_mapping(parsed_name)
     return base_ingredient
@@ -154,8 +194,6 @@ def get_ingredient_mapping(parsed_name):
     ingredient_mapping_filter = parsed_name
     while not ingredient_mapping_found:
         try:
-            print("123")
-            print(ingredient_mapping_filter)
             ingredient_mapping = IngredientMapping.objects.get(
                 name=ingredient_mapping_filter)
         except IngredientMapping.DoesNotExist:
@@ -164,7 +202,6 @@ def get_ingredient_mapping(parsed_name):
             ingredient_mapping_found = True
             base_ingredient = BaseIngredient.objects.get(
                 pk=ingredient_mapping.ingredient_id)
-            print(base_ingredient.name)
         else:
             if ' ' in ingredient_mapping_filter:
                 ingredient_mapping_filter = ingredient_mapping_filter.split(
@@ -175,10 +212,14 @@ def get_ingredient_mapping(parsed_name):
 
 
 def convert_to_number(number):
+    try:
+        return float(number)
+    except ValueError:
+        pass
     if not number or isinstance(number, str):
         return 1.0
-    if isinstance(number, numbers.Real):
-        return float(number)
+    # if isinstance(number, numbers.Real):
+    #     return float(number)
     rx = r'(\d*)(%s)' % '|'.join(map(chr, FRACTIONS))
     for d, f in re.findall(rx, number):
         d = int(d) if d else 0
@@ -202,11 +243,8 @@ class AmountConverter(object):
         multiplier = CONVERSION_MAP.get(from_unit).get(to_unit)
         converted_amount = 0
         try:
-            print("============================")
-            print(amount)
             converted_amount = float(amount) * multiplier
         except ValueError:
-            print(amount)
             amount = unicodedata.numeric(amount.rstrip())
             converted_amount = float(amount) * multiplier
         return converted_amount, to_unit
