@@ -24,7 +24,7 @@ from rest_api.models import (
 
 list_template = {
     'item_list': [],
-    'for_review': []    
+    'for_review': []   
 }
 
 item_template = {
@@ -123,9 +123,16 @@ def get_ingredients(ingredient_list):
     return shopping_list
 
 
+def find_index(item_list, key, value):
+    for i, dic in enumerate(item_list):
+        if dic[key] == value:
+            return i
+    return -1
+
+
 def merge_ingredients(ingredient_list):
     merged_shopping_list = dict(list_template)
-    item_list = {}
+    item_list = []
     for_review = []
     for ingredient in ingredient_list:
         # Adding whole items (ie. 1 red pepper))
@@ -134,14 +141,16 @@ def merge_ingredients(ingredient_list):
         if base_ingredient:
             ingredient['name'] = base_ingredient.name
             ingredient['category'] = base_ingredient.category
-            if item_list.get(ingredient['name'], None):
-                item_list[ingredient['name']]['amount'] += ingredient.get('amount')
+            if not any(item['name'] == ingredient['name'] for item in item_list):
+                item_list.append({
+                        'name': ingredient.get('name'),
+                        'amount': ingredient.get('amount'),
+                        'unit': ingredient.get('unit'),
+                        'category': ingredient.get('category')
+                    })
             else:
-                item_list[ingredient['name']] = {
-                    'amount': ingredient.get('amount'),
-                    'unit': ingredient.get('unit'),
-                    'category': ingredient.get('category')
-                }
+                item_index = find_index(item_list, 'name', ingredient.get('name'))
+                item_list[item_index]['amount'] += ingredient.get('amount')
         else:
             for_review.append(ingredient)
     merged_shopping_list['item_list'] = item_list
