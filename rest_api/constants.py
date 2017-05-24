@@ -155,7 +155,6 @@ INGREDIENT_UNITS = [
     ('clove', NON_MEASURABLE),
     ('cup', MEASURABLE),
     ('cups', MEASURABLE),
-    ('inch', NON_MEASURABLE),
     ('kg', MEASURABLE),
     ('ml', MEASURABLE),
     ('lb', MEASURABLE),

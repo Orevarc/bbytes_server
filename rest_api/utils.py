@@ -41,14 +41,14 @@ def string_punctuation(text):
     return text.translate(translator).strip()
 
 
-def find_amount(full_ingredient):
+def find_amount(text):
     print('><><><><><><><')
-    print(full_ingredient)
-    amount = [int(s) for s in full_ingredient.split() if s.isdigit()]
+    print(text)
+    amount = [int(s) for s in text.split() if s.isdigit()]
     print(amount)
     if not amount:
         rx = r'(\d*)(%s)' % '|'.join(map(chr, FRACTIONS))
-        fraction_test = re.findall(rx, full_ingredient)
+        fraction_test = re.findall(rx, text)
         try:
             amount = fraction_test[0][1]
         except IndexError:
@@ -56,6 +56,58 @@ def find_amount(full_ingredient):
     else:
         amount = amount[0]
     return amount
+
+
+def find_amount_before_index(text, index):
+    sub_string = text[:index].strip()
+    amount_string = ''
+    digit_found = False
+    for char in reversed(sub_string):
+        try:
+            unicodedata.digit(char)
+            digit_found = True
+            amount_string = char + amount_string
+        except ValueError:
+            try:
+                temp = str(unicodedata.numeric(char))
+                digit_found = True
+                amount_string = temp.strip('0') + amount_string
+            except ValueError:
+                if not digit_found:
+                    pass
+                else:
+                    break
+    amount = 1
+    try:
+        amount = float(amount_string)
+    except ValueError:
+        pass
+    return amount
+
+
+def is_number(char):
+    try:
+        float(char)
+        return True
+    except ValueError:
+        pass
+    try:
+        unicodedata.numeric(char)
+        return True
+    except (TypeError, ValueError):
+        pass
+    return False
+
+
+def format_ingredient_string(text, unit='', unit_index=None):
+    if unit_index:
+        unit_char_count = len(unit)
+        unit_end_index = unit_index + unit_char_count
+        text = text[:unit_index] + text[unit_end_index:]
+    else:
+        text = text.replace(unit, '')
+    text = ''.join([char for char in text if not is_number(char)])
+    return string_punctuation(text.strip())
 
 
 def find_amount_unit(amount_unit, full_ingredient):
@@ -82,15 +134,18 @@ def get_ingredients(ingredient_list):
         amount_unit = ''
         name = ''
         full_text = ''.join(ingredient.findAll(text=True))
-        full_ingredient = string_punctuation(full_text.rsplit('$')[0].lower())
+        full_ingredient = full_text.rsplit('$')[0].lower()
         ingredient_unit_found = False
         unit_index, amount_unit = min(find_amount_unit(
             unit[0], full_ingredient) for unit in INGREDIENT_UNITS)
         if amount_unit:
-            amount = full_ingredient[:unit_index]
-            unit_char_count = len(amount_unit)
-            name_start_index = unit_index + unit_char_count
-            name = full_ingredient[name_start_index:]
+            amount = find_amount_before_index(full_ingredient, unit_index)
+            # unit_char_count = len(amount_unit)
+            # name_start_index = unit_index + unit_char_count
+            name = format_ingredient_string(
+                text=full_ingredient,
+                unit=amount_unit,
+                unit_index=unit_index)
             print('111111')
             print(full_ingredient)
             print(amount)
@@ -109,16 +164,19 @@ def get_ingredients(ingredient_list):
             amount = find_amount(full_ingredient)
             if not amount:
                 # If no amount ingredient and no amount
-                item['name'] = full_ingredient
+                item['name'] = format_ingredient_string(full_ingredient, '')
                 item['category'] = IngredientCategories.MISC
+                item['full_ingredient'] = full_ingredient
             else:
                 item['unit'] = ''
                 item['amount'] = convert_to_number(amount)
-                item['name'] = full_ingredient.rsplit(str(amount))[1]
+                item['name'] = format_ingredient_string(full_ingredient, '')
+                item['full_ingredient'] = full_ingredient
         else:
             item['amount'] = convert_to_number(amount)
             item['unit'] = amount_unit.translate(string.punctuation).strip()
             item['name'] = name.translate(string.punctuation).strip()
+            item['full_ingredient'] = full_ingredient
         shopping_list.append(item)
     return shopping_list
 
