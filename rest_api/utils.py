@@ -119,14 +119,27 @@ def find_amount_unit(amount_unit, full_ingredient):
 
 def get_shopping_list_from_urls(urls):
     shopping_list = []
+    recipes = []
     for url in urls:
         recipe_page = BeautifulSoup(urllib.request.urlopen(url))
         ingredient_list = recipe_page.find_all('li', {'class': 'ingredient'})
-        shopping_list.extend(get_ingredients(ingredient_list))
-    return merge_ingredients(shopping_list)
+        shopping_list.extend(get_ingredients(ingredient_list, url))
+        recipes.append({
+            'title': get_recipe_title(recipe_page),
+            'url': url
+        })
+    merged_shopping_list = merge_ingredients(shopping_list)
+    return {
+        'shopping_list': merged_shopping_list,
+        'recipes': recipes
+    }
 
 
-def get_ingredients(ingredient_list):
+def get_recipe_title(recipe_page):
+    return recipe_page.select('.post-title h1')[0].text
+
+
+def get_ingredients(ingredient_list, url):
     shopping_list = []
     for ingredient in ingredient_list:
         item = dict(item_template)
@@ -177,6 +190,7 @@ def get_ingredients(ingredient_list):
             item['unit'] = amount_unit.translate(string.punctuation).strip()
             item['name'] = name.translate(string.punctuation).strip()
             item['full_ingredient'] = full_ingredient
+        item['recipe_url'] = url
         shopping_list.append(item)
     return shopping_list
 
@@ -204,16 +218,34 @@ def merge_ingredients(ingredient_list):
                         'name': ingredient.get('name'),
                         'amount': ingredient.get('amount'),
                         'unit': ingredient.get('unit'),
-                        'category': ingredient.get('category')
-                    })
+                        'category': ingredient.get('category'),
+                        'recipes': [attach_recipe_url(
+                            ingredient.get('recipe_url'),
+                            ingredient.get('amount'),
+                            ingredient.get('unit'))
+                        ]
+                })
             else:
                 item_index = find_index(item_list, 'name', ingredient.get('name'))
                 item_list[item_index]['amount'] += ingredient.get('amount')
+                item_list[item_index]['recipes'].append(attach_recipe_url(
+                    ingredient.get('recipe_url'),
+                    ingredient.get('amount'),
+                    ingredient.get('unit'))
+                )
         else:
             for_review.append(ingredient)
     merged_shopping_list['item_list'] = item_list
     merged_shopping_list['for_review'] = for_review
     return merged_shopping_list
+
+
+def attach_recipe_url(url, amount, unit):
+    return {
+        'url': url,
+        'amount': amount,
+        'unit': unit
+    }
 
 
 def get_base_ingredient(parsed_name):

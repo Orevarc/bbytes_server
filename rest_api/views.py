@@ -98,9 +98,7 @@ class ShoppingListApi(APIView):
         Posting a list of urls to obtain a shopping list
         '''
         shopping_list = get_shopping_list_from_urls(request.data.get('recipeUrls'))
-        return Response({
-            'shoppingList': shopping_list,
-        })
+        return Response(shopping_list)
 
 
 class BaseIngredientApi(APIView):
