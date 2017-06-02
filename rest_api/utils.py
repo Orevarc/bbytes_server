@@ -42,10 +42,7 @@ def string_punctuation(text):
 
 
 def find_amount(text):
-    print('><><><><><><><')
-    print(text)
     amount = [int(s) for s in text.split() if s.isdigit()]
-    print(amount)
     if not amount:
         rx = r'(\d*)(%s)' % '|'.join(map(chr, FRACTIONS))
         fraction_test = re.findall(rx, text)
@@ -126,13 +123,19 @@ def get_shopping_list_from_urls(urls):
         shopping_list.extend(get_ingredients(ingredient_list, url))
         recipes.append({
             'title': get_recipe_title(recipe_page),
-            'url': url
+            'img': get_recipe_image(recipe_page),
+            'url': url,
+            'multiplier': 1
         })
     merged_shopping_list = merge_ingredients(shopping_list)
     return {
         'shopping_list': merged_shopping_list,
         'recipes': recipes
     }
+
+
+def get_recipe_image(recipe_page):
+    return recipe_page.select('.ERSTopRight img')[0]['src']
 
 
 def get_recipe_title(recipe_page):
@@ -159,19 +162,11 @@ def get_ingredients(ingredient_list, url):
                 text=full_ingredient,
                 unit=amount_unit,
                 unit_index=unit_index)
-            print('111111')
-            print(full_ingredient)
-            print(amount)
-            print(amount_unit)
             amount, amount_unit = AmountConverter.convert_measurable_amount(
                 from_unit=amount_unit,
                 to_unit=DEFAULT_MEASURABLE_UNIT,
                 amount=amount
             )
-            print('2222222')
-            print(full_ingredient)
-            print(amount)
-            print(amount_unit)
             ingredient_unit_found = True
         if not ingredient_unit_found:
             amount = find_amount(full_ingredient)
