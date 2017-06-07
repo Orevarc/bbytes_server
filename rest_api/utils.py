@@ -118,7 +118,8 @@ def get_shopping_list_from_urls(urls):
     shopping_list = []
     recipes = []
     for url in urls:
-        recipe_page = BeautifulSoup(urllib.request.urlopen(url))
+        request = urllib.request.Request(url, headers={'User-Agent': "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"})
+        recipe_page = BeautifulSoup(urllib.request.urlopen(request).read())
         ingredient_list = recipe_page.find_all('li', {'class': 'ingredient'})
         shopping_list.extend(get_ingredients(ingredient_list, url))
         recipes.append({
