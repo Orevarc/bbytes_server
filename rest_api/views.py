@@ -10,7 +10,7 @@ import json
 import logging
 
 from rest_api.constants import IngredientCategories
-from rest_api.utils import get_shopping_list_from_urls
+from rest_api.parsers import SiteParser
 
 
 class AppList(APIView):
@@ -97,8 +97,18 @@ class ShoppingListApi(APIView):
         '''
         Posting a list of urls to obtain a shopping list
         '''
-        shopping_list = get_shopping_list_from_urls(request.data.get('recipeUrls'))
-        return Response(shopping_list)
+        ingredient_parser = SiteParser(urls=request.data.get('recipeUrls'))
+        ingredient_parser.parse_urls()
+        if ingredient_parser.has_errors():
+            return Response(ingredient_parser.errors, status=status.HTTP_400_BAD_REQUEST)
+        print(ingredient_parser.shopping_list)
+        return Response({
+            'recipes': ingredient_parser.recipes,
+            'shopping_list': ingredient_parser.shopping_list,
+            'review_list': ingredient_parser.review_list
+        })
+        # shopping_list = get_shopping_list_from_urls(request.data.get('recipeUrls'))
+        # return Response(shopping_list)
 
 
 class BaseIngredientApi(APIView):
@@ -125,8 +135,6 @@ class IngredientMappingApi(APIView):
     Ingredient Mapping Endpoints
     """
     def post(self, request, *args, **kwargs):
-        print("IN IM API")
-        print(request.data)
         serializer = serializers.IngredientMappingSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
