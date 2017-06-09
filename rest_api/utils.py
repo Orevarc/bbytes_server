@@ -1,3 +1,4 @@
+from fractions import Fraction
 import unicodedata
 
 from rest_api.constants import CONVERSION_MAP
@@ -93,8 +94,7 @@ class AmountConverter(object):
             converted_amount = float(amount) * multiplier
         except ValueError:
             if '/' in amount:
-                numerator, denominator = amount.rsplit('/')
-                amount = float(numerator) / float(denominator)
+                amount = float(sum(Fraction(s) for s in amount.split()))
             else:
                 amount = unicodedata.numeric(amount.rstrip())
             converted_amount = float(amount) * multiplier
