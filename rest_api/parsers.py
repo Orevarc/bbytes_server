@@ -192,7 +192,7 @@ class IngredientParser(object):
             pass
         return amount
 
-    def convert_to_number(self, number):
+    def convert_to_number(number):
         '''
             Returns a float for the number passed whether the number is
             a string, unicode fraction, or integer/float
