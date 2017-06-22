@@ -1,0 +1,5 @@
+{
+  "pipeline": ["nlp_spacy", "ner_crf", "ner_synonyms"],
+  "path" : "./ingredient_crf/ner_models",
+  "data" : "./result.json"
+}

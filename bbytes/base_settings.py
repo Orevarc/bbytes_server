@@ -113,3 +113,11 @@ GITHUB = {
 # Simplified static file serving.
 # https://warehouse.python.org/project/whitenoise/
 STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
+
+# Rasa NLU Settings for NER
+
+TRAINED_MODEL_PATH = 'ingredient_crf/ner_models/model_20170622-144144'
+
+NER_MODEL = os.path.join(BASE_DIR, TRAINED_MODEL_PATH)
+
+RASA_CONFIG_FILE = os.path.join(BASE_DIR, 'ingredient_crf/config/config.json')

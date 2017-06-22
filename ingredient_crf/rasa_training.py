@@ -1,17 +1,26 @@
 import json
+import os
+import random
 import re
 import decimal
 import pandas as pd
+
+from rasa_nlu.converters import load_data
+from rasa_nlu.config import RasaNLUConfig
+from rasa_nlu.model import Trainer
 from six import string_types
 
 
 from ingredient_crf import utils
 
 
-def train(csv_path, count, offset, output_directory):
-    '''
-    TODO
-    '''
+def train(training_data_path, config_path, output_directory):
+    training_data = load_data(training_data_path)
+    trainer = Trainer(RasaNLUConfig(config_path))
+    trainer.train(training_data)
+    model_directory = trainer.persist(output_directory)
+    model_fullpath = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), model_directory[2:])
 
 
 def generate_training_data(csv_path, count, offset):
@@ -43,6 +52,7 @@ def generate_training_data(csv_path, count, offset):
             "text": utils.clumpFractions(display_input).strip(),
             "entities": best_tags
         })
+    random.shuffle(training_data['rasa_nlu_data']['common_examples'])
     with open('result.json', 'w') as fp:
         json.dump(training_data, fp)
 

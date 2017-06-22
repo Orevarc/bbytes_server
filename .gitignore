@@ -47,6 +47,10 @@ reports
 # Django stuff:
 *.log
 
+# CRF Training
+result.json
+ingredient_crf/ner_models/
+
 # Sphinx documentation
 docs/_build/
 

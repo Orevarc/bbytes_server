@@ -5,6 +5,9 @@ import unicodedata
 from urllib import request
 from urllib.parse import urlparse
 
+from ingredient_crf.ingredient_recognizer import EntityExtractor
+from ingredient_crf import utils
+
 from rest_api.constants import (
     CONVERSION_MAP,
     DEFAULT_MEASURABLE_UNIT,
@@ -22,6 +25,8 @@ from rest_api.utils import (
 )
 
 from bs4 import BeautifulSoup
+
+recognizer = EntityExtractor()
 
 
 class SiteParser(object):
@@ -192,7 +197,7 @@ class IngredientParser(object):
             pass
         return amount
 
-    def convert_to_number(number):
+    def convert_to_number(self, number):
         '''
             Returns a float for the number passed whether the number is
             a string, unicode fraction, or integer/float
@@ -268,6 +273,8 @@ class BBytesParser(IngredientParser):
         for ingredient in ingredient_list:
             name = unit = amount = category = ''
             full_ingredient = self.strip_cost(ingredient)
+            test = full_ingredient
+            print(recognizer.extract_entities(utils.clumpFractions(utils.cleanUnicodeFractions(test.replace(',', '').strip()))))
             unit_index, unit = min(self.find_unit(
                 ing_unit[0], full_ingredient) for ing_unit in INGREDIENT_UNITS)
             if unit:
@@ -307,6 +314,7 @@ class BBytesParser(IngredientParser):
             unit = self.get_text_by_class(
                 ingredient, '.wprm-recipe-ingredient-unit')
             category = ''
+            print(recognizer.extract_entities(utils.cleanUnicodeFractions(name).replace(',', '').strip()))
             if unit:
                 if unit == 'can':
                     unit_index, unit = min(self.find_unit(
