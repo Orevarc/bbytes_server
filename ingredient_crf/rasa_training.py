@@ -8,19 +8,31 @@ import pandas as pd
 from rasa_nlu.converters import load_data
 from rasa_nlu.config import RasaNLUConfig
 from rasa_nlu.model import Trainer
+from rasa_nlu.persistor import get_persistor
 from six import string_types
 
 
 from ingredient_crf import utils
 
 
-def train(training_data_path, config_path, output_directory):
+def train(training_data_path, config_path, output_directory, aws=False):
+    config = RasaNLUConfig(config_path)
     training_data = load_data(training_data_path)
-    trainer = Trainer(RasaNLUConfig(config_path))
+    trainer = Trainer(config)
     trainer.train(training_data)
-    model_directory = trainer.persist(output_directory)
+    if aws:
+        persistor = get_persistor(config)
+        model_directory = trainer.persist(
+            path=output_directory,
+            persistor=persistor
+        )
+    else:
+        model_directory = trainer.persist(
+            path=output_directory
+        )
     model_fullpath = os.path.join(
         os.path.dirname(os.path.realpath(__file__)), model_directory[2:])
+    print('Training Complete. Path to trained model: {}'.format(model_fullpath))
 
 
 def generate_training_data(csv_path, count, offset):

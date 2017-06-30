@@ -1,5 +1,9 @@
 {
   "pipeline": ["nlp_spacy", "ner_crf", "ner_synonyms"],
-  "path" : "./ingredient_crf/ner_models",
-  "data" : "./result.json"
+  "path": "bbytes-models",
+  "data": "./result.json",
+  "storage": "aws",
+  "server_model_dirs": "model_20170630-152023",
+  "bucket_name": "bbytes-models",
+  "aws_region": "us-east-2"
 }

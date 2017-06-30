@@ -91,7 +91,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 # Internationalization
-# https://docs.djangoproject.com/en/1.9/topics/i18n/
+# https://docs.djangoproject.com/en/1.9/topics/i18n
 
 LANGUAGE_CODE = 'en-us'
 
@@ -116,7 +116,7 @@ STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
 
 # Rasa NLU Settings for NER
 
-TRAINED_MODEL_PATH = 'ingredient_crf/ner_models/model_20170622-144144'
+TRAINED_MODEL_PATH = 'bbytes-models/model_20170630-152023'
 
 NER_MODEL = os.path.join(BASE_DIR, TRAINED_MODEL_PATH)
 

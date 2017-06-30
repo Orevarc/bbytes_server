@@ -49,7 +49,7 @@ reports
 
 # CRF Training
 result.json
-ingredient_crf/ner_models/
+bbytes-models/
 
 # Sphinx documentation
 docs/_build/
