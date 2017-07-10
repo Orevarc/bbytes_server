@@ -50,6 +50,7 @@ reports
 # CRF Training
 result.json
 bbytes-models/
+*.tar.gz
 
 # Sphinx documentation
 docs/_build/

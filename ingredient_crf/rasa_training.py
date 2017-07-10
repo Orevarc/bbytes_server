@@ -5,6 +5,8 @@ import re
 import decimal
 import pandas as pd
 
+from bbytes.settings import MODEL_NAME
+
 from rasa_nlu.converters import load_data
 from rasa_nlu.config import RasaNLUConfig
 from rasa_nlu.model import Trainer
@@ -24,15 +26,45 @@ def train(training_data_path, config_path, output_directory, aws=False):
         persistor = get_persistor(config)
         model_directory = trainer.persist(
             path=output_directory,
-            persistor=persistor
+            persistor=persistor,
+            model_name=MODEL_NAME
         )
     else:
         model_directory = trainer.persist(
-            path=output_directory
+            path=output_directory,
+            model_name=MODEL_NAME
         )
     model_fullpath = os.path.join(
         os.path.dirname(os.path.realpath(__file__)), model_directory[2:])
     print('Training Complete. Path to trained model: {}'.format(model_fullpath))
+
+
+def test(test_data_path):
+    correct = 0
+    wrong = 0
+    issues = []
+    from ingredient_crf.ingredient_recognizer import EntityExtractor
+    recognizer = EntityExtractor()
+    df = pd.read_csv(test_data_path)
+    for index, row in df.iterrows():
+        print("Test")
+        test_input = utils.clumpFractions(utils.cleanUnicodeFractions(row["input"].replace(',', '').strip()))
+        parsed_ing = recognizer.extract_entities(test_input)
+        entities = parsed_ing['entities']
+        for entity in entities:
+            if entity['value'] in row[entity['entity']]:
+                correct += 1
+            else:
+                # Should have a funciton that grabs the correct tag
+                wrong += 1
+                issues.append({
+                    'input': test_input,
+                    'item': entity['value'],
+                    'labeled_as': entity['entity']
+                })
+
+
+
 
 
 def generate_training_data(csv_path, count, offset):

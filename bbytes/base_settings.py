@@ -116,7 +116,9 @@ STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
 
 # Rasa NLU Settings for NER
 
-TRAINED_MODEL_PATH = 'bbytes-models/model_20170630-152023'
+MODEL_NAME = 'model_20170630-152023'
+
+TRAINED_MODEL_PATH = 'bbytes-models/{}'.format(MODEL_NAME)
 
 NER_MODEL = os.path.join(BASE_DIR, TRAINED_MODEL_PATH)
 
