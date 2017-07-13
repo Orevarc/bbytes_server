@@ -84,12 +84,14 @@ class SiteParser(object):
         for ingredient in self.ingredient_list:
             name = ingredient.get('name')
             amount = ingredient.get('amount')
+            category = ingredient.get('category')
             unit = ingredient.get('unit')
             url = ingredient.get('recipe_url')
             base_ingredient = BaseIngredientFinder.find(name)
             if base_ingredient:
                 name = base_ingredient.name
-                category = base_ingredient.category
+                if category != IngredientCategories.MISC:
+                    category = base_ingredient.category
                 if not any(item['name'] == name for item in self.shopping_list):
                     self.shopping_list.append({
                         'name': name,
@@ -269,12 +271,17 @@ class BBytesParser(IngredientParser):
         else:
             self.parse_ingredient_list(ingredient_list)
 
+    # def has_null_entities(self, entities):
+    #     return not bool(all([True if entity != '' else False for entity in entities.values()]))
+
     def parse_ingredient_list(self, ingredient_list):
         for ingredient in ingredient_list:
             name = unit = amount = category = ''
             full_ingredient = self.strip_cost(ingredient)
-            test = full_ingredient
-            print(recognizer.extract_entities(utils.clumpFractions(utils.cleanUnicodeFractions(test.replace(',', '').strip()))))
+            extracted_entities = recognizer.extract_entities(utils.clumpFractions(utils.cleanUnicodeFractions(full_ingredient.replace(',', '').strip())))
+            amount = extracted_entities['amount']
+            unit = extracted_entities['unit']
+            name = extracted_entities['name']
             unit_index, unit = min(self.find_unit(
                 ing_unit[0], full_ingredient) for ing_unit in INGREDIENT_UNITS)
             if unit:
@@ -314,7 +321,14 @@ class BBytesParser(IngredientParser):
             unit = self.get_text_by_class(
                 ingredient, '.wprm-recipe-ingredient-unit')
             category = ''
-            print(recognizer.extract_entities(utils.cleanUnicodeFractions(name).replace(',', '').strip()))
+            full_ingredient = '{} {} {}'.format(amount, unit, name)
+            extracted_entities = recognizer.extract_entities(utils.clumpFractions(utils.cleanUnicodeFractions(full_ingredient.replace(',', '').strip())))
+            if not extracted_entities['amount'] == '':
+                amount = extracted_entities['amount']
+            if not extracted_entities['unit'] == '':
+                unit = extracted_entities['unit']
+            if not extracted_entities['name'] == '':
+                name = extracted_entities['name']
             if unit:
                 if unit == 'can':
                     unit_index, unit = min(self.find_unit(
@@ -340,7 +354,7 @@ class BBytesParser(IngredientParser):
                 'amount': amount,
                 'unit': unit,
                 'category': category,
-                'full_ingredient': '{}{} {}'.format(amount, unit, name),
+                'full_ingredient': full_ingredient,
                 'recipe_url': self.url
             })
 

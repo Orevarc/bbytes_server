@@ -283,3 +283,8 @@ FRACTIONS = {
     0x215A: 0.83333333,  # ; ; 5/6 # No       VULGAR FRACTION FIVE SIXTHS
     0x215E: 0.875,  # ; ; 7/8 # No       VULGAR FRACTION SEVEN EIGHTHS
 }
+
+# Entity names for CRF entity extraction
+AMOUNT_TAG = 'QTY'
+UNIT_TAG = 'UNIT'
+FOOD_TAG = 'NAME'
