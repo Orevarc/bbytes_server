@@ -29,7 +29,7 @@ class BaseIngredientFinder(object):
         '''
         base_ingredient = None
         base_ingredient_found = False
-        base_ingredient_filter = name
+        base_ingredient_filter = name.strip()
         while not base_ingredient_found:
             try:
                 base_ingredient = BaseIngredient.objects.get(

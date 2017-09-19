@@ -13,6 +13,7 @@ from rest_api.constants import (
     DEFAULT_MEASURABLE_UNIT,
     FRACTIONS,
     IngredientCategories,
+    INGREDIENT_UNIT_MAPPINGS,
     INGREDIENT_UNITS,
     PINCH_AMOUNT,
     PINCH_AMOUNT_UNIT
@@ -49,6 +50,9 @@ class SiteParser(object):
             if domain == 'www.budgetbytes.com':
                 parser = BBytesParser(url)
                 parser.parse_url()
+            elif domain == 'allrecipes.com':
+                parser = AllRecipesParser(url)
+                parser.parse_url()
             self.ingredient_list.extend(parser.ingredients)
             self.recipes.append(parser.recipe_info)
         self.merge_ingredients()
@@ -64,7 +68,7 @@ class SiteParser(object):
         else:
             self.errors.append({
                 'type': 'error',
-                'message': 'Invalid URL. Ensure all urls entered are valid'
+                'message': 'Ensure all recipe urls entered are valid'
             })
             return False
 
@@ -80,9 +84,14 @@ class SiteParser(object):
         domain = '{uri.netloc}'.format(uri=parsed_uri)
         return domain
 
+    def clean_text(self, text):
+        translator = str.maketrans('', '', string.punctuation)
+        return text.translate(translator).strip()
+
     def merge_ingredients(self):
         for ingredient in self.ingredient_list:
-            name = ingredient.get('name')
+            name = self.clean_text(ingredient.get('name'))
+            print(name)
             amount = ingredient.get('amount')
             category = ingredient.get('category')
             unit = ingredient.get('unit')
@@ -121,8 +130,11 @@ class IngredientParser(object):
         '''
             Returns the entire html of the recipe page
         '''
+        headers = {
+            'User-Agent': 'bbytes'
+        }
         req = request.Request(
-            self.url, headers={'User-Agent': "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"})
+            self.url, headers=headers)
         return BeautifulSoup(request.urlopen(req).read())
 
     def parse_url(self):
@@ -145,6 +157,22 @@ class IngredientParser(object):
         if element:
             return element[0].text
         return ''
+
+    def clean_full_ingredient(self, ingredient, unit):
+        new_unit = self.clean_unit(unit)
+        return ingredient.replace(unit, new_unit)
+
+    def clean_unit(self, unit):
+        '''
+            Cleans the unit parsed and standardizes it in order to make all
+            ingredient units the same for merging
+        '''
+        if unit.endswith('s'):
+            # Strip 's' off of unit
+            unit = unit[:-1]
+        if unit in INGREDIENT_UNIT_MAPPINGS:
+            unit = INGREDIENT_UNIT_MAPPINGS[unit]
+        return unit
 
     def find_unit(self, unit, text):
         '''
@@ -246,6 +274,82 @@ class IngredientParser(object):
     def strip_punctuation(self, text):
         translator = str.maketrans('', '', string.punctuation)
         return text.translate(translator).strip()
+
+
+class AllRecipesParser(IngredientParser):
+
+    def __init__(self, url):
+        super().__init__(url)
+
+    def parse_url(self):
+        recipe_page = self.get_recipe_page()
+        self.get_ingredients(recipe_page)
+        self.set_recipe_info(
+            title=self.get_recipe_title(recipe_page),
+            img=self.get_recipe_image(recipe_page)
+        )
+
+    def get_ingredients(self, recipe_page):
+        ingredient_list = recipe_page.find_all(
+            'span', {'class': 'recipe-ingred_txt added'})
+        self.parse_ingredient_list(ingredient_list)
+
+    # def has_null_entities(self, entities):
+    #     return not bool(all([True if entity != '' else False for entity in entities.values()]))
+
+    def parse_ingredient_list(self, ingredient_list):
+        for ingredient in ingredient_list:
+            print('ING')
+            print(ingredient)
+            name = unit = amount = category = ''
+            full_ingredient = str(ingredient.string)
+            print(full_ingredient)
+            extracted_entities = recognizer.extract_entities(utils.clumpFractions(utils.cleanUnicodeFractions(full_ingredient.replace(',', '').strip())))
+            amount = extracted_entities['amount']
+            unit = extracted_entities['unit']
+            name = extracted_entities['name']
+            full_ingredient = self.clean_full_ingredient(full_ingredient, unit)
+            unit = self.clean_unit(unit)
+            unit_index, unit = min(self.find_unit(
+                ing_unit[0], full_ingredient) for ing_unit in INGREDIENT_UNITS)
+            if unit:
+                # Known unit has been found, extract amount and convert
+                name = self.extract_name(
+                    text=full_ingredient, unit=unit, unit_index=unit_index)
+                amount = self.find_amount_before_index(
+                    text=full_ingredient, unit_index=unit_index)
+                amount, unit = AmountConverter.convert_measurable_amount(
+                    from_unit=unit, to_unit=DEFAULT_MEASURABLE_UNIT, amount=amount)
+            else:
+                # No unit was found, attempt to find an amount
+                name = self.extract_name(
+                        text=full_ingredient, unit='', unit_index=None)
+                amount = self.find_amount(full_ingredient)
+                if amount:
+                    amount = self.convert_to_number(amount)
+                else:
+                    # No amount was found, add it to misc.
+                    # (eg. freshly cracked pepper)
+                    category = IngredientCategories.MISC
+            self.ingredients.append({
+                'name': name,
+                'amount': amount,
+                'unit': unit,
+                'category': category,
+                'full_ingredient': full_ingredient,
+                'recipe_url': self.url
+            })
+
+    def get_recipe_image(self, recipe_page):
+        # try:
+        #     return recipe_page.select('.ERSTopRight img')[0]['src']
+        # except IndexError:
+        return recipe_page.select('.rec-photo')[0]['src']
+        # return 'http://images.media-allrecipes.com/userphotos/250x140/4559472.jpg'
+
+    def get_recipe_title(self, recipe_page):
+        return recipe_page.select('.recipe-summary__h1')[0].text
+
 
 
 class BBytesParser(IngredientParser):

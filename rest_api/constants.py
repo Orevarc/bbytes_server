@@ -150,6 +150,13 @@ DEFAULT_MEASURABLE_UNIT = 'g'
 MEASURABLE = 'MEASURABLE'
 NON_MEASURABLE = 'NON_MEASURABLE'
 
+INGREDIENT_UNIT_MAPPINGS = {
+    'teaspoon': 'tsp',
+    'tablespoon': 'tbsp',
+    'ounce': 'oz',
+    'pound': 'lb'
+}
+
 INGREDIENT_UNITS = [
     ('bunch', NON_MEASURABLE),# 1/2 bunch of cilantro
     ('clove', NON_MEASURABLE),

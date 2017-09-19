@@ -1,12 +1,10 @@
 #!/usr/bin/env python
 import re
-import string
 
 
 def tokenize(s):
     """
     Tokenize on parenthesis, punctuation, spaces and American units followed by a slash.
-
     We sometimes give American units and metric units for baking recipes. For example:
         * 2 tablespoons/30 mililiters milk or cream
         * 2 1/2 cups/300 grams all-purpose flour
@@ -14,12 +12,10 @@ def tokenize(s):
     The recipe database only allows for one unit, and we want to use the American one.
     But we must split the text on "cups/" etc. in order to pick it up.
     """
-
     american_units = ['cup', 'tablespoon', 'teaspoon', 'tbsp', 'tsp', 'pound', 'lb', 'ounce', 'oz' 'quart', 'pint']
     for unit in american_units:
         s = s.replace(unit + '/', unit + ' ')
         s = s.replace(unit + 's/', unit + 's ')
-
     return filter(None, re.split(r'([,\(\)])?\s*', clumpFractions(s)))
 
 
@@ -39,10 +35,8 @@ def cleanUnicodeFractions(s):
     """
     Replace unicode fractions with ascii representation, preceded by a
     space.
-
     "1\x215e" => "1 7/8"
     """
-
     fractions = {
         u'\x215b': '1/8',
         u'\x215c': '3/8',
@@ -60,10 +54,8 @@ def cleanUnicodeFractions(s):
         u'\x2154': '2/3',
         u'\xbd': '1/2',
     }
-
     for f_unicode, f_ascii in fractions.items():
         s = s.replace(f_unicode, ' ' + f_ascii)
-
     return s
 
 
@@ -126,11 +118,13 @@ def singularize(word):
     else:
         return word
 
+
 def isCapitalized(token):
     """
     Returns true if a given token starts with a capital letter.
     """
     return re.match(r'^[A-Z]', token) is not None
+
 
 def lengthGroup(actualLength):
     """
@@ -142,6 +136,7 @@ def lengthGroup(actualLength):
 
     return "X"
 
+
 def insideParenthesis(token, tokens):
     """
     Returns true if the word is inside parenthesis in the phrase.
@@ -151,6 +146,7 @@ def insideParenthesis(token, tokens):
     else:
         line = " ".join(tokens)
         return re.match(r'.*\(.*'+re.escape(token)+'.*\).*',  line) is not None
+
 
 def displayIngredient(ingredient):
     """
