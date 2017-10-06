@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from rest_api.models import App, Repo, Article, BaseIngredient, IngredientMapping
+from rest_api.models import BaseIngredient, IngredientMapping
 
 
 class BaseIngredientSerializer(serializers.ModelSerializer):
