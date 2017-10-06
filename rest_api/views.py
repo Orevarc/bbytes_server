@@ -1,9 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from rest_api.helpers import GitHubRepoFetcher
-from rest_api.models import App, Repo, Article, BaseIngredient, IngredientMapping
+from rest_api.models import BaseIngredient
 from rest_api import serializers
 
 import json
@@ -23,7 +21,9 @@ class ShoppingListApi(APIView):
         ingredient_parser = SiteParser(urls=request.data.get('recipeUrls'))
         ingredient_parser.parse_urls()
         if ingredient_parser.has_errors():
-            return Response(ingredient_parser.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                ingredient_parser.errors,
+                status=status.HTTP_400_BAD_REQUEST)
         return Response({
             'recipes': ingredient_parser.recipes,
             'shopping_list': ingredient_parser.shopping_list,
@@ -37,7 +37,8 @@ class BaseIngredientApi(APIView):
     """
     def get(self, request, *args, **kwargs):
         base_ingredients = BaseIngredient.objects.all()
-        serializer = serializers.BaseIngredientSerializer(base_ingredients, many=True, context={'request': request})
+        serializer = serializers.BaseIngredientSerializer(
+            base_ingredients, many=True, context={'request': request})
         return Response({
             'baseIngredients': serializer.data
         })
